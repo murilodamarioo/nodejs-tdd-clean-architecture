@@ -42,7 +42,6 @@ const makeTokenGeneratorWithError = () => {
       throw new Error()
     }
   }
-
   return new TokenGeneratorSpy()
 }
 
@@ -58,7 +57,6 @@ const makeLoadUserByEmailRepository = () => {
     id: 'any_id',
     password: 'hashed_password'
   }
-
   return loadUserByEmailRepositorySpy
 }
 
@@ -78,7 +76,15 @@ const makeUpdateAccessTokenRepository = () => {
       this.accessToken = accessToken
     }
   }
+  return new UpdateAccessTokenRepositorySpy()
+}
 
+const makeUpdateAccessTokenRepositoryWithError = () => {
+  class UpdateAccessTokenRepositorySpy {
+    async update () {
+      throw new Error()
+    }
+  }
   return new UpdateAccessTokenRepositorySpy()
 }
 
@@ -184,6 +190,8 @@ describe('Auth UseCase', () => {
   test('Should throw if any dependecy throws', async () => {
     const loadUserByEmailRepository = makeLoadUserByEmailRepository()
     const encrypter = makeEncrypter()
+    const tokenGenerator = makeTokenGenerator()
+
     const suts = [].concat(
       new AuthUseCase({
         loadUserByEmailRepository: makeLoadUserByEmailRepositoryWithError()
@@ -196,6 +204,12 @@ describe('Auth UseCase', () => {
         loadUserByEmailRepository: makeLoadUserByEmailRepositoryWithError(),
         encrypter,
         tokenGenerator: makeTokenGeneratorWithError()
+      }),
+      new AuthUseCase({
+        loadUserByEmailRepository: makeLoadUserByEmailRepositoryWithError(),
+        encrypter,
+        tokenGenerator,
+        updateAccessTokenRepository: makeUpdateAccessTokenRepositoryWithError()
       })
     )
 
